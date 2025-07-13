@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-def train_model(model, train_loader, test_loader, num_epochs=30, learning_rate=0.0001):
+from augmentation import train_transforms
+
+
+def train_model(model, train_loader, test_loader, num_epochs, learning_rate):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     criterion = nn.BCELoss()
@@ -18,6 +21,11 @@ def train_model(model, train_loader, test_loader, num_epochs=30, learning_rate=0
         total_train = 0
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
+
+            # Включаем аугментацию батча "на лету"
+            images = [train_transforms(_) for _ in images]
+            images = torch.stack(images).to(device)
+
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
