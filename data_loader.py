@@ -29,4 +29,7 @@ def prepare_dataloaders(train_dataset, y_train, test_dataset, y_test, batch_size
     test_tensor_dataset = TensorDataset(test_tensor, y_test_tensor)
     train_loader = DataLoader(train_tensor_dataset, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_tensor_dataset, batch_size=batch_size)
+    print(torch.unique(y_train_tensor, return_counts=True))
+    print(train_tensor.shape)
+    print(train_tensor[0].min(), train_tensor[0].max())  # значения должны быть в диапазоне [0.0, 1.0]
     return train_loader, test_loader

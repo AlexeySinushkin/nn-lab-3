@@ -5,10 +5,10 @@ import torch.optim as optim
 from augmentation import train_transforms
 
 
-def train_model(model, train_loader, test_loader, num_epochs, learning_rate):
+def train_model(model, train_loader, test_loader, num_epochs, learning_rate, apply_augmentation):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.RMSprop(model.parameters(), lr=learning_rate)
 
     train_losses, val_losses = [], []
@@ -21,10 +21,10 @@ def train_model(model, train_loader, test_loader, num_epochs, learning_rate):
         total_train = 0
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
-
-            # Включаем аугментацию батча "на лету"
-            images = [train_transforms(_) for _ in images]
-            images = torch.stack(images).to(device)
+            if apply_augmentation:
+                # Включаем аугментацию батча "на лету"
+                images = [train_transforms(_) for _ in images]
+                images = torch.stack(images).to(device)
 
             optimizer.zero_grad()
             outputs = model(images)
@@ -32,7 +32,7 @@ def train_model(model, train_loader, test_loader, num_epochs, learning_rate):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            preds = (outputs > 0.5).float()
+            preds = (torch.sigmoid(outputs) > 0.5).float()
             correct_train += (preds == labels).sum().item()
             total_train += labels.size(0)
 
